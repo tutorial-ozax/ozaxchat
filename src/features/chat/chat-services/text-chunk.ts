@@ -1,5 +1,5 @@
-const chunkSize = 1000;
-const chunkOverlap = 200;
+const chunkSize = 3000;
+const chunkOverlap = 500;
 
 export function chunkDocumentWithOverlap(document: string): string[] {
   const chunks: string[] = [];

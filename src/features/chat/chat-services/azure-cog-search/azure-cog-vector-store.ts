@@ -41,6 +41,7 @@ type AzureCogRequestObject = {
   search: string;
   facets: string[];
   filter: string;
+  queryType: string;
   vectors: AzureCogVectorField[];
   top: number;
 };
@@ -56,6 +57,7 @@ export const simpleSearch = async (
     search: filter?.search || "*",
     facets: filter?.facets || [],
     filter: filter?.filter || "",
+    queryType: "full",
     vectors: [],
     top: filter?.top || 10,
   };
@@ -87,9 +89,10 @@ export const similaritySearchVectorWithScore = async (
   }`;
 
   const searchBody: AzureCogRequestObject = {
-    search: filter?.search || "*",
+    search: query,
     facets: filter?.facets || [],
     filter: filter?.filter || "",
+    queryType: "full",
     vectors: [
       { value: embeddings.data[0].embedding, fields: "embedding", k: k },
     ],

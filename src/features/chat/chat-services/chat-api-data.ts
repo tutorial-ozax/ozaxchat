@@ -5,9 +5,9 @@ import { OpenAIStream, StreamingTextResponse } from "ai";
 import { similaritySearchVectorWithScore } from "./azure-cog-search/azure-cog-vector-store";
 import { initAndGuardChatSession } from "./chat-thread-service";
 import { CosmosDBChatMessageHistory } from "./cosmosdb/cosmosdb";
-import { PromptGPTProps } from "./models";
+import { PromptGPTProps, ConversationStyle } from "./models";
 
-const SYSTEM_PROMPT = `あなたは ${AI_NAME}です。ユーザーからの質問に対して日本語で丁寧に回答します。 \n`;
+const SYSTEM_PROMPT = `あなたは ${AI_NAME}です。ユーザーからの質問に対して日本語で丁寧に回答します。 \n回答に際して、回答に必要な要素をリストアップし、Step By Stepで回答します。ユーザーが質問内で明示的に回答の書式を指定している場合はそれに従って回答します。`;
 
 const CONTEXT_PROMPT = ({
   context,
@@ -59,6 +59,14 @@ export const ChatAPIData = async (props: PromptGPTProps) => {
     .join("\n------\n");
 
   try {
+    const getTemperatureForStyle = (style: ConversationStyle) => {
+      switch (style) {
+        case 'creative': return 0.8;  // 想像的
+        case 'balanced': return 0.5;  // バランス
+        case 'precise': return 0.2;   // 厳密
+        default: return 0.5;
+      }
+    };
     const response = await openAI.chat.completions.create({
       messages: [
         {
@@ -76,6 +84,8 @@ export const ChatAPIData = async (props: PromptGPTProps) => {
       ],
       model: process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
       stream: true,
+      max_tokens: 15000,
+      temperature: getTemperatureForStyle(chatThread.conversationStyle),
     });
 
     const stream = OpenAIStream(response, {
